@@ -196,6 +196,44 @@ def del_data(db):
         db.rollback()
         print(">>Error al borrar datos! Operación cancelada!")
         print(sys.exc_info()[0])
+
+def search_data(db):
+    try:
+        tablesDatabase = get_tables(db)
+        data = count_records(db,'Trabajadores')
+        if(len(tablesDatabase) != 0 and data != 0):
+            while(True):
+                opt = int(input("\n¿Por qué atributo desea hacer la búsqueda?\n1.- Clave\t2.- Nombre\t3.- Sueldo\nInserte un número entre 1 y 3: "))
+
+                if(opt == 1):
+                    while(True):
+                        try:                
+                            id = int(input("Ingrese la clave que desea encontrar: "))    
+                            break    
+                        except ValueError:
+                            print(">>El dato clave es numérico")
+                    searching_data(db, 'clave', id)
+                    break
+                elif(opt == 2):        
+                    name = input("Ingrese el nombre que desea encontrar: ")
+                    searching_data(db,'nombre', name)
+                    break
+                elif(opt == 3):
+                    while(True):
+                        try:
+                            salary = float(input("Ingrese el salario que desea encontrar: $"))
+                            break            
+                        except ValueError:
+                            print(">>El dato salario es numérico")
+                    searching_data(db,'sueldo', salary)
+                    break
+                else:
+                    print(">>Error, opción no reconocida!\nIntente de nuevo")
+        else:
+            print("No hay tablas o registros aún!")
+    except:
+        print(">>Error al buscar datos!")
+        print(sys.exc_info[0])
 #--------------------------------CRUD--------------------------
 #------------------------------HELPERS-------------------------
 def get_tables(db):
@@ -227,15 +265,36 @@ def count_records(db, table):
     cursor.execute("SELECT COUNT(*) FROM {0}".format(table))
     items = cursor._rows[0][0]
     return (items)
+
+def searching_data(db, field, data):
+    try:
+        cursor = db.cursor()
+        if(field == 'nombre'):
+            query = ("SELECT * FROM Trabajadores WHERE {0} = '{1}'".format(field, data))
+        else:
+            query = ("SELECT * FROM Trabajadores WHERE {0} = {1}".format(field, data))
+        cursor.execute(query)
+        items = len(cursor._rows)    
+        score_result = cursor.fetchall()
+        print("\n\nTrabajadores")
+        for row in score_result:
+            key = row[0]
+            name = row[1]
+            salary = row[2]
+            print("\nClave: {0} \t Nombre: {1} \t Sueldo: {2}".format(key,name,salary))
+        print("Se encontraron {0} filas".format(items))
+    except:
+        print(">>Error al imprimir los datos!")
+        print(sys.exc_info[0])
 #------------------------------HELPERS-------------------------
 #-------------------------------MAIN---------------------------
 def main():
     try:
         db = connection()
         while True:
-            print("\n.:Menú principal:.")
-            print("--Por favor, elija un opción--")
-            opt = int(input('1.- Crear tablas  2.- Mostrar datos  3.- Insertar datos  4.- Borrar datos  0.- Salir\nOpción: '))
+            print("\n\t\t.:Menú principal:.")
+            print("\t  --Por favor, elija un opción--")
+            opt = int(input('1.- Crear tablas  2.- Mostrar datos  3.- Insertar datos  \n4.- Buscar datos 5.- Borrar datos  0.- Salir\nOpción: '))
             if(opt == 0):
                 print("Hasta luego!")
                 break
@@ -249,6 +308,9 @@ def main():
                 print("\n\n.:Insertar datos:.")
                 insert_data(db)
             elif(opt == 4):
+                print("\n\n.:Buscar datos:.")
+                search_data(db)
+            elif(opt == 5):
                 print("\n\n.:Borrar datos:.")
                 del_data(db)    
             else:
