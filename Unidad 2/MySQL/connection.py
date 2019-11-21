@@ -24,6 +24,7 @@ def connection():
         #Procesing query
         data = cursor.fetchone()
         print("Database version: {0}".format(data))
+        cursor.close()
         return db    
 #--------------------------------CRUD--------------------------
 def create_tables(db):
@@ -41,7 +42,8 @@ def create_tables(db):
             """)
 
             cursor.execute(query_trabajador)
-            print("Tabla creada exitosamente!") 
+            print("Tabla creada exitosamente!")
+            cursor.close() 
         else:
             print("Tablas creada con anterioridad!")
     except:
@@ -71,6 +73,7 @@ def show_data(db):
                 salary = row[2]
                 print("\nClave: {0} \t Nombre: {1} \t Sueldo: {2}".format(key,name,salary))
             print("\nTiene {0} registros en total".format(count_records(db,'Trabajadores')))
+            cursor.close()
         else:
             print("No hay tablas aún!")
     except:
@@ -123,7 +126,9 @@ def insert_data(db):
     except:
         db.rollback()
         print(">>Error al insertar contenido!")
-        print(sys.exc_info()[0]) 
+        print(sys.exc_info()[0])
+    else:
+        cursor.close()
 
 def del_data(db):
     try:
@@ -196,6 +201,8 @@ def del_data(db):
         db.rollback()
         print(">>Error al borrar datos! Operación cancelada!")
         print(sys.exc_info()[0])
+    else:
+        cursor.close()
 
 def search_data(db):
     try:
@@ -303,7 +310,9 @@ def up_data(db):
     except SystemError as r:
         db.rollback()
         print(">>Error al actualizar datos!")
-        print(r)  
+        print(r)
+    else:
+        cursor.close()
 #--------------------------------CRUD--------------------------
 #------------------------------HELPERS-------------------------
 def get_tables(db):
@@ -314,6 +323,7 @@ def get_tables(db):
     if (cursor.rowcount != 0):
         tablesDatabase = [table[0] for table in cursor]
 
+    cursor.close()
     return tablesDatabase
 
 def drop_tables(db):
@@ -325,6 +335,7 @@ def drop_tables(db):
         """)
         cursor.execute(d_tables)
         print("Tablas borradas!")
+        cursor.close()
     except:
         db.rollback()
         print(">>Error al borrar tablas")
@@ -335,6 +346,7 @@ def count_records(db, table):
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(*) FROM {0}".format(table))
         items = cursor._rows[0][0]
+        cursor.close()
         return (items)
     except:
         print(">>Error al contar registros!")
@@ -344,6 +356,7 @@ def count_specific_records(db, table, id):
         cursor = db.cursor()
         cursor.execute("SELECT COUNT(*) FROM {0} WHERE clave = {1}".format(table, id))
         items = cursor._rows[0][0]
+        cursor.close()
         return (items)
     except:
         print(">>Error al contar registros!")
@@ -365,6 +378,7 @@ def searching_data(db, field, data):
             salary = row[2]
             print("\nClave: {0} \t Nombre: {1} \t Sueldo: {2}".format(key,name,salary))
         print("Se encontraron {0} filas".format(items))
+        cursor.close()
     except:
         print(">>Error al imprimir los datos!")
         print(sys.exc_info[0])
