@@ -234,6 +234,76 @@ def search_data(db):
     except:
         print(">>Error al buscar datos!")
         print(sys.exc_info[0])
+
+def up_data(db):
+    try:
+        cursor = db.cursor()
+        tablesDatabase = get_tables(db)
+        data = count_records(db,'Trabajadores')
+        if(len(tablesDatabase) != 0 and data != 0):
+            while(True):
+                opt = int(input("\n¿Qué atributos desea actualizar?\n1.- Nombre\t2.- Sueldo\t3.- Los dos\nInserte un número entre 1 y 3: "))
+                if(opt == 1):
+                    print("¡Actualizar nombre!")
+                    id = int(input("Ingrese la clave del trabajador: "))
+                    exist = count_specific_records(db, 'Trabajadores', id)
+                    if(exist):
+                        name = input("Ingrese el nuevo nombre: ")
+                        query_name = ("""
+                            UPDATE Trabajadores
+                            SET nombre  = '{0}'
+                            WHERE clave = {1};
+                        """.format(name, id))
+                        cursor.execute(query_name)
+                        db.commit()
+                        print("Usuario actualizado!")
+                    else:
+                        print("Trabajador con clave {0} no existe!".format(id))
+                    break
+                elif(opt == 2):
+                    print("¡Actualizar sueldo!")
+                    id = int(input("Ingrese la clave del trabajador: "))
+                    exist = count_specific_records(db, 'Trabajadores', id)
+                    if(exist):
+                        salary = float(input("Ingrese el nuevo salario: "))
+                        query_salary = ("""
+                            UPDATE Trabajadores
+                            SET sueldo = {0}
+                            WHERE clave = {1};
+                        """.format(salary, id))
+                        cursor.execute(query_salary)
+                        db.commit()
+                        print("Usuario actualizado!")
+                    else:
+                        print("Trabajador con clave {0} no existe!".format(id))
+                    break
+                elif(opt == 3):
+                    print("¡Actualizar nombre y sueldo!")
+                    id = int(input("Ingrese la clave del trabajador: "))
+                    exist = count_specific_records(db, 'Trabajadores', id)
+                    if(exist):
+                        name = input("Ingrese el nuevo nombre: ")
+                        salary = float(input("Ingrese el nuevo salario: "))
+                        query_both = ("""
+                            UPDATE Trabajadores
+                            SET nombre = '{0}', sueldo = {1}
+                            WHERE clave = {2};
+                        """.format(name, salary, id))
+                        cursor.execute(query_both)
+                        db.commit()
+                        print("Usuario actualizado!")
+                    else:
+                        print("Trabajador con clave {0} no existe!".format(id))
+                    break
+                else:
+                    print("Opción no válida, intente de nuevo")
+    except ValueError:
+        db.rollback()
+        print(">>Error, entrada no válida!")
+    except SystemError as r:
+        db.rollback()
+        print(">>Error al actualizar datos!")
+        print(r)  
 #--------------------------------CRUD--------------------------
 #------------------------------HELPERS-------------------------
 def get_tables(db):
@@ -261,10 +331,22 @@ def drop_tables(db):
         print(sys.exc_info()[0])        
 
 def count_records(db, table):
-    cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) FROM {0}".format(table))
-    items = cursor._rows[0][0]
-    return (items)
+    try:
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM {0}".format(table))
+        items = cursor._rows[0][0]
+        return (items)
+    except:
+        print(">>Error al contar registros!")
+
+def count_specific_records(db, table, id):
+    try:
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM {0} WHERE clave = {1}".format(table, id))
+        items = cursor._rows[0][0]
+        return (items)
+    except:
+        print(">>Error al contar registros!")
 
 def searching_data(db, field, data):
     try:
@@ -292,9 +374,11 @@ def main():
     try:
         db = connection()
         while True:
-            print("\n\t\t.:Menú principal:.")
-            print("\t  --Por favor, elija un opción--")
-            opt = int(input('1.- Crear tablas  2.- Mostrar datos  3.- Insertar datos  \n4.- Buscar datos 5.- Borrar datos  0.- Salir\nOpción: '))
+            print("\n\t\t\t .:Menú principal:.")
+            print("\t\t  --Por favor, elija un opción--")
+            opt = int(input("""1.- Crear tablas \t 2.- Mostrar datos \t 3.- Insertar datos  \n
+4.- Buscar datos \t 5.- Actualizar datos \t 6.-Borrar datos
+\n\t\t\t 0.- Salir\nOpción: """))
             if(opt == 0):
                 print("Hasta luego!")
                 break
@@ -311,12 +395,15 @@ def main():
                 print("\n\n.:Buscar datos:.")
                 search_data(db)
             elif(opt == 5):
+                print("\n\n.:Actualizar datos:.")
+                up_data(db)
+            elif(opt == 6):
                 print("\n\n.:Borrar datos:.")
-                del_data(db)    
+                del_data(db)
             else:
                 print("Opción incorrecta, intente de nuevo!")
     except:
-        print(">>Error")
+        print(">>Main_Error")
     finally:
         db.close()
 
