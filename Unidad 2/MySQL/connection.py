@@ -4,11 +4,13 @@ By: Brandon I. Pérez Sandoval
 Description: This program will let you
     make the whole CRUD of a MySQL Database.
     
-Warning: You'll need the library PyMySQL, so if you don't have it use this command:
-    pip install PyMySQL 
+Warning: You'll need the library PyMySQL and FPDF, so if you don't have them use these command:
+    pip install pymysql 
+    pip install fpdf
 """
 import pymysql
 import sys
+from fpdf import FPDF
 
 def connection():
     try:
@@ -73,9 +75,19 @@ def show_data(db):
                 salary = row[2]
                 print("\nClave: {0} \t Nombre: {1} \t Sueldo: {2}".format(key,name,salary))
             print("\nTiene {0} registros en total".format(count_records(db,'Trabajadores')))
+            
+            save = int(input("\n¿Desea generar un archivo PDF con estos datos? (1 - Sí \t 2 - No)\nIntroduzca un número: "))
+            if(save == 1):
+                print("Generando archivo PDF...")
+                create_pdf(db,n)
+            else:
+                print("OK!")
+
             cursor.close()
         else:
             print("No hay tablas aún!")
+    except ValueError:
+        print(">>Error, debe introducir un dato numérico!")
     except:
         print(">>Error al mostrar contenido!")
         print(sys.exc_info()[0])
@@ -383,6 +395,40 @@ def searching_data(db, field, data):
         print(">>Error al imprimir los datos!")
         print(sys.exc_info[0])
 #------------------------------HELPERS-------------------------
+#------------------------------PDF-------------------------
+def create_pdf(db, limit):        
+    try:
+        cursor = db.cursor()
+
+        #PDF preparation
+        pdf = FPDF(orientation='P',unit='mm',format='A4')
+        pdf.add_page()
+        pdf.set_font('helvetica','B',15)
+        pdf.cell(80)
+        pdf.cell(30,10,'Registros','B',1,'C')
+        pdf.ln('20')
+
+        cursor.execute("SELECT * FROM Trabajadores LIMIT {0};".format(limit))
+        score_result = cursor.fetchall()
+
+        pdf.set_font('Arial','',12)
+        for row in score_result:
+            key = row[0]
+            name = row[1]
+            salary = row[2]
+            pdf.cell(0,10,'Clave: {0} | Nombre: {1} | Sueldo: {2}'.format(key,name,salary),0,1)
+        pdf.set_font('Arial','B',12)
+        pdf.ln(20)
+        pdf.cell(50)
+        pdf.cell(70,10,'Tiene {0} registros en total'.format(count_records(db,'Trabajadores')),1,0,'C')
+        cursor.close()
+        print("PDF generado exitosamente!!!")
+    except:        
+        print(">>Error al hacer PDF")
+        print(sys.exc_info[0])
+    else:
+        pdf.output("registros.pdf")
+#------------------------------PDF-------------------------
 #-------------------------------MAIN---------------------------
 def main():
     try:
